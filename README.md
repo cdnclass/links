@@ -1,5 +1,5 @@
 # links
-interesting I found from time to time
+interesting find from time to time
 https://innovate-aiml-data-apj.virtual.awsevents.com/
 
 https://innovate-aiml-data-apj.virtual.awsevents.com
