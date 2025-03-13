@@ -1,0 +1,214 @@
+Great! Here’s a Docker Compose setup incorporating **PERN** and **Prisma** to showcase how they can work together:
+
+---
+
+### **Lab: Setting Up PERN with Prisma Using Docker Compose**
+
+**Objective:**  
+Create a development environment for the PERN stack integrated with Prisma, orchestrated by Docker Compose.
+
+---
+
+### **1. Prerequisites**
+Ensure the following are installed on your machine:
+- **Docker** and **Docker Compose** ([Get Docker here](https://docs.docker.com/get-docker/)).
+- Basic knowledge of PostgreSQL, Node.js, and React.
+
+---
+
+### **2. Project Setup**
+1. **Create the Project Directory:**
+   ```bash
+   mkdir pern-prisma-docker
+   cd pern-prisma-docker
+   ```
+
+2. **Set Up the Folder Structure:**
+   ```bash
+   mkdir backend frontend prisma
+   ```
+
+---
+
+### **3. Backend Setup**
+1. **Write the `Dockerfile` for Backend:**
+   Create `backend/Dockerfile`:
+   ```dockerfile
+   FROM node:16
+
+   WORKDIR /usr/src/app
+   COPY package*.json ./
+   RUN npm install
+   COPY . .
+   EXPOSE 5000
+   CMD ["npm", "run", "dev"]
+   ```
+
+2. **Write the Backend Application:**
+   Inside the `backend` folder, create:
+   - `package.json`:
+     ```json
+     {
+       "name": "backend",
+       "version": "1.0.0",
+       "main": "index.js",
+       "scripts": {
+         "dev": "nodemon index.js"
+       },
+       "dependencies": {
+         "express": "^4.17.1",
+         "prisma": "^4.9.0",
+         "@prisma/client": "^4.9.0"
+       },
+       "devDependencies": {
+         "nodemon": "^2.0.22"
+       }
+     }
+     ```
+   - `index.js`:
+     ```javascript
+     const express = require('express');
+     const { PrismaClient } = require('@prisma/client');
+     const app = express();
+     const prisma = new PrismaClient();
+     const PORT = 5000;
+
+     app.use(express.json());
+
+     // Example route
+     app.get('/users', async (req, res) => {
+       const users = await prisma.user.findMany();
+       res.json(users);
+     });
+
+     app.listen(PORT, () => {
+       console.log(`Server running on http://localhost:${PORT}`);
+     });
+     ```
+
+3. **Set Up Prisma Schema:**
+   Create `prisma/schema.prisma`:
+   ```prisma
+   generator client {
+     provider = "prisma-client-js"
+   }
+
+   datasource db {
+     provider = "postgresql"
+     url      = env("DATABASE_URL")
+   }
+
+   model User {
+     id    Int     @id @default(autoincrement())
+     name  String
+     email String  @unique
+   }
+   ```
+
+---
+
+### **4. PostgreSQL Service Setup**
+1. **Add PostgreSQL in `docker-compose.yml`:**
+   Create `docker-compose.yml`:
+   ```yaml
+   version: "3.9"
+   services:
+     db:
+       image: postgres:15
+       environment:
+         POSTGRES_USER: user
+         POSTGRES_PASSWORD: password
+         POSTGRES_DB: pern_prisma_db
+       ports:
+         - "5432:5432"
+       volumes:
+         - db_data:/var/lib/postgresql/data
+
+     backend:
+       build:
+         context: ./backend
+       environment:
+         DATABASE_URL: postgres://user:password@db:5432/pern_prisma_db
+       ports:
+         - "5000:5000"
+       volumes:
+         - ./backend:/usr/src/app
+         - /usr/src/app/node_modules
+       depends_on:
+         - db
+
+     frontend:
+       build:
+         context: ./frontend
+       ports:
+         - "3000:3000"
+       volumes:
+         - ./frontend:/usr/src/app
+         - /usr/src/app/node_modules
+
+   volumes:
+     db_data:
+   ```
+
+2. **Test the Database Connection:**
+   Run the following commands inside the backend:
+   ```bash
+   npx prisma migrate dev --name init
+   npx prisma db seed # Optionally, create a seed file for sample data
+   ```
+
+---
+
+### **5. Frontend Setup**
+1. **Create the Frontend Application:**
+   Navigate to `frontend` and initialize a React app:
+   ```bash
+   npx create-react-app frontend
+   cd frontend
+   ```
+
+2. **Write a Simple Component to Fetch Data:**
+   Replace `frontend/src/App.js` with:
+   ```javascript
+   import React, { useEffect, useState } from "react";
+
+   const App = () => {
+     const [users, setUsers] = useState([]);
+
+     useEffect(() => {
+       fetch("http://localhost:5000/users")
+         .then((response) => response.json())
+         .then((data) => setUsers(data));
+     }, []);
+
+     return (
+       <div>
+         <h1>Users List</h1>
+         <ul>
+           {users.map((user) => (
+             <li key={user.id}>{user.name} - {user.email}</li>
+           ))}
+         </ul>
+       </div>
+     );
+   };
+
+   export default App;
+   ```
+
+---
+
+### **6. Run the Docker Compose Setup**
+1. **Start All Services:**
+   In the project root directory:
+   ```bash
+   docker-compose up --build
+   ```
+
+2. **Verify Services:**
+   - Visit `http://localhost:5000/users` for the backend API.
+   - Visit `http://localhost:3000` for the React frontend.
+
+---
+
+This should get your PERN stack running with Prisma, all managed by Docker Compose. Let me know if you'd like to dive deeper into any specific part! 😊
