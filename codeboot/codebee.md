@@ -1,3 +1,6 @@
+bootcamp
+https://www.youtube.com/watch?v=eHkcATrR1Js&list=PLu0CiQ7bzwESR9SfUhlqWV0Siwj6gKtoR golf weekend
+
 https://www.youtube.com/watch?v=E4wU8y7r1Uc
 https://www.youtube.com/watch?v=HRmwxIuJQWM
 https://www.youtube.com/watch?v=HjUpqfEonow
